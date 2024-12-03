@@ -36,6 +36,7 @@ import ProductSearch from "./components/Input";
 import FlashSalePage from "./pages/FlashSeller";
 import BestSellProduct from "./pages/BestSeller";
 import ProductDetailPage from "./pages/SearchProduct";
+import BestProductDetails from "./pages/BestSellerDetails";
 
 
 function ScrollToTop() {
@@ -81,8 +82,8 @@ function App() {
           <Route path="/flashSale" element={<FlashSalePage></FlashSalePage>} />
           <Route path="/bestselling" element={<BestSellProduct></BestSellProduct>} />
           <Route path="/product/:id" element={<ProductDetailPage></ProductDetailPage>} />
-
-
+          <Route path="/bestSale/:id" element={<BestProductDetails></BestProductDetails>} />
+       
 
           <Route path="/store/:id" element={<StoreDetailsComponent />} />
           <Route path="/contact" element={<ContactUs />} />

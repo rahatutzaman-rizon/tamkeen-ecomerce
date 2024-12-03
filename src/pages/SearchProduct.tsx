@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
 import axios from 'axios';
 import { 
   ShoppingCart, 
@@ -14,7 +15,8 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import Cookies from 'js-cookie';
+// import Cookies from 'js-cookie';
+
 
 // Product Interface
 interface Product {
@@ -56,7 +58,7 @@ const ProductDetailPage: React.FC = () => {
           setProduct(matchedProduct);
           setSelectedSize(matchedProduct.size || null);
         } else {
-          setError('Product not found');
+          setError('Product ');
         }
       } catch (err) {
         setError('Error fetching product details');
@@ -65,8 +67,10 @@ const ProductDetailPage: React.FC = () => {
         setLoading(false);
       }
     };
+ 
 
     fetchProductDetails();
+      
   }, []);
 
   // Image Navigation
@@ -87,34 +91,38 @@ const ProductDetailPage: React.FC = () => {
   };
 
   // Add to Cart Handler
-  const handleAddToCart = async () => {
-    if (!product) return;
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
-    try {
-      const cartItem = {
-        product_id: product.id,
-        quantity: quantity,
-        size: selectedSize,
-      };
+  // Load cart items from localStorage when the component mounts
+  useEffect(() => {
+    // Get cart items from localStorage (default to an empty array if not found)
+    const savedCart = localStorage.getItem('cart');
+    const parsedCart: CartItem[] = savedCart ? JSON.parse(savedCart) : [];
+    setCartItems(parsedCart);
+  }, []);
 
-      const token = Cookies.get('authToken');
+  // Function to handle adding an item to the cart
+  const handleAddToCart = () => {
+    const newCartItem: CartItem = {
+      product_id: 1, // Example product ID
+      quantity: 1,
+      size: 'M', // Example size
+    };
 
-      const response = await axios.post('https://api.tamkeen.center/api/cart/add', cartItem, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+    // Add the new cart item to the existing cart
+    const updatedCart: CartItem[] = [...cartItems, newCartItem];
 
-      if (response.data.success) {
-        // Use a more modern toast notification instead of alert
-        console.log('Product added to cart successfully!');
-      } else {
-        console.error('Failed to add product to cart');
-      }
-    } catch (err) {
-      console.error('Add to cart error:', err);
-    }
+    // Save the updated cart to localStorage
+    localStorage.setItem('cart', JSON.stringify(updatedCart));
+
+    // Update the state to reflect the new cart
+    setCartItems(updatedCart);
+
+    // Show success message
+    alert('Product added to cart successfully!');
   };
+
+  
 
   // Loading State
   if (loading) return (

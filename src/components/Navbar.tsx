@@ -32,7 +32,7 @@ const Navbar = () => {
   const nav = [
     { label: "Home", route: "/" },
     { label: "Category", route: "/category" },
-    { label: "Categories", route: "/categories" },
+    // { label: "Categories", route: "/categories" },
     { label: "Contact", route: "/contact" },
     { label: "Stores", route: "/stores" },
   ];
@@ -143,7 +143,7 @@ const Navbar = () => {
 
   // Handle filter button click
   const handleFilterClick = () => {
-    navigate('/filter');
+    navigate('/categories/17');
   };
 
   return (
@@ -198,7 +198,16 @@ const Navbar = () => {
               onClick={handleFilterClick}
               className="bg-gray-100 p-2 border rounded-r-md hover:bg-gray-200"
             >
-              <IoFilter />
+
+<Link
+             
+              to="categories/17"
+              className="text-gray-500 hover:text-primary hover:underline"
+            >
+
+<IoFilter />
+            </Link>
+            
             </button>
           </form>
 

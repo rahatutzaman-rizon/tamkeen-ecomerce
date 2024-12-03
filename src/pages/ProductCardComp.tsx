@@ -120,7 +120,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
       hover:bg-gray-600 transition duration-300
       transform active:scale-95
     "
-                        onClick={() => navigate("/products/"+product.id)}
+                        onClick={() => navigate(`/product/${product.id}`)}
                     >
                         <Eye className="w-6 h-6" />
                     </button>
