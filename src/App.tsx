@@ -73,36 +73,33 @@ const ProtectedRoute = ({ element }: { element: JSX.Element }) => {
 function App() {
   return (
     <Router>
-      <InitialAuthCheck />
+     
       <ScrollToTop />
       <div className="flex flex-col gap-10">
         <Navbar />
 
         <Routes>
+          {/* Public Routes (No Login Needed) */}
           <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignUpPage />} />
           <Route path="/stores" element={<StoreGrid />} />
           <Route path="/stores/:slug" element={<StorePage />} />
- 
+          <Route path="/category" element={<Category />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/products/:slug" element={<ProductPage />} />
           <Route path="/categories/:id" element={<CategoryBrowser />} />
           <Route path="/input" element={<ProductSearch />} />
           <Route path="/flashSale" element={<FlashSalePage />} />
           <Route path="/bestselling" element={<BestSellProduct />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/bestSale/:id" element={<BestProductDetails />} />
-       
-          <Route path="/store/:id" element={<StoreDetailsComponent />} />
           <Route path="/contact" element={<ContactUs />} />
-          <Route path="/category" element={<Category />} />
-          <Route path="/categories" element={<Categories />} />
-          <Route path="/products/:slug" element={<ProductPage />} />
-          <Route path="wishlist" element={<MyWishlist />} /> 
-          <Route path="/cart" element={<ShoppingCart />} />
-          <Route path="/checkout" element={<ProtectedRoute element={<Checkout />} />} />
-          <Route path="/invoice" element={<ProtectedRoute element={<Invoice />} />} />
+          <Route path="/store/:id" element={<StoreDetailsComponent />} />
+
+          {/* Protected Routes (Login Required) */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
           <Route path="/vendor-signup" element={<VendorSignUpPage />} />
-          <Route path="/categories/:slug/review" element={<ProtectedRoute element={<Reviews />} />} />
+
           <Route path="/account" element={<ProtectedRoute element={<Account />} />}>
             <Route path="" element={<MyProfile />} />
             <Route path="address-book" element={<ProtectedRoute element={<AddressBook />} />} />
@@ -113,6 +110,13 @@ function App() {
             <Route path="refer-a-friend" element={<ProtectedRoute element={<ReferAFriend />} />} />
             <Route path="/account/order/:id" element={<ProtectedRoute element={<MyOrder />} />} />
           </Route>
+
+          {/* Protected Routes (With Review/Checkout/Invoice that need login) */}
+          <Route path="/checkout" element={<ProtectedRoute element={<Checkout />} />} />
+          <Route path="/invoice" element={<ProtectedRoute element={<Invoice />} />} />
+          <Route path="/categories/:slug/review" element={<ProtectedRoute element={<Reviews />} />} />
+          <Route path="wishlist" element={<ProtectedRoute element={<MyWishlist />} />} />
+          <Route path="/cart" element={<ProtectedRoute element={<ShoppingCart />} />} />
         </Routes>
 
         <Footer />
