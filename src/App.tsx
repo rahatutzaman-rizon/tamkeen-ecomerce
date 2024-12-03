@@ -3,7 +3,6 @@ import Footer from "./components/Footer";
 import LandingPage from "./pages/LandingPage";
 import Navbar from "./components/Navbar";
 import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom";
-// import { AboutUs } from "./pages/AboutUs";
 import StoreGrid from "./pages/Stores";
 import StorePage from "./pages/StorePage";
 import ContactUs from "./pages/ContactUs";
@@ -26,7 +25,7 @@ import MyProfile from "./pages/account/components/MyProfile";
 import Account from "./pages/account/Account";
 import MyOrder from "./pages/account/components/Order";
 import { useLayoutEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAtom } from "jotai";
 import { authAtom } from "./atoms/authAtom";
 import Category from "./pages/Category";
@@ -38,7 +37,6 @@ import BestSellProduct from "./pages/BestSeller";
 import ProductDetailPage from "./pages/SearchProduct";
 import BestProductDetails from "./pages/BestSellerDetails";
 
-
 function ScrollToTop() {
   const { pathname } = useLocation();
 
@@ -49,28 +47,38 @@ function ScrollToTop() {
   return null;
 }
 
+const InitialAuthCheck = () => {
+  const [authState] = useAtom(authAtom);
+  const navigate = useNavigate();
+
+  useLayoutEffect(() => {
+    if (!authState.isAuthenticated) {
+      navigate('/login');
+    }
+  }, [authState.isAuthenticated, navigate]);
+
+  return null;
+};
+
 const ProtectedRoute = ({ element }: { element: JSX.Element }) => {
   const [authState] = useAtom(authAtom);
 
-  // Check if the user is authenticated
   if (!authState.isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // If authenticated, render the element
   return element;
 };
-
 
 function App() {
   return (
     <Router>
+      <InitialAuthCheck />
       <ScrollToTop />
       <div className="flex flex-col gap-10">
         <Navbar />
 
         <Routes>
-
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignUpPage />} />
@@ -78,13 +86,12 @@ function App() {
           <Route path="/stores/:slug" element={<StorePage />} />
  
           <Route path="/categories/:id" element={<CategoryBrowser />} />
-          <Route path="/input" element={<ProductSearch></ProductSearch>} />
-          <Route path="/flashSale" element={<FlashSalePage></FlashSalePage>} />
-          <Route path="/bestselling" element={<BestSellProduct></BestSellProduct>} />
-          <Route path="/product/:id" element={<ProductDetailPage></ProductDetailPage>} />
-          <Route path="/bestSale/:id" element={<BestProductDetails></BestProductDetails>} />
+          <Route path="/input" element={<ProductSearch />} />
+          <Route path="/flashSale" element={<FlashSalePage />} />
+          <Route path="/bestselling" element={<BestSellProduct />} />
+          <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="/bestSale/:id" element={<BestProductDetails />} />
        
-
           <Route path="/store/:id" element={<StoreDetailsComponent />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/category" element={<Category />} />
@@ -92,24 +99,21 @@ function App() {
           <Route path="/products/:slug" element={<ProductPage />} />
           <Route path="wishlist" element={<MyWishlist />} /> 
           <Route path="/cart" element={<ShoppingCart />} />
-          <Route path="/checkout" element={<ProtectedRoute element={<Checkout />} />} /> {/* Protected route */}
-          <Route path="/invoice" element={<ProtectedRoute element={<Invoice />} />} /> {/* Protected route */}
+          <Route path="/checkout" element={<ProtectedRoute element={<Checkout />} />} />
+          <Route path="/invoice" element={<ProtectedRoute element={<Invoice />} />} />
           <Route path="/vendor-signup" element={<VendorSignUpPage />} />
-          <Route path="/categories/:slug/review" element={<ProtectedRoute element={<Reviews />} />} /> {/* Protected route */}
+          <Route path="/categories/:slug/review" element={<ProtectedRoute element={<Reviews />} />} />
           <Route path="/account" element={<ProtectedRoute element={<Account />} />}>
             <Route path="" element={<MyProfile />} />
-            <Route path="address-book" element={<ProtectedRoute element={<AddressBook />} />} /> {/* Protected route */}
-            <Route path="payment-options" element={<ProtectedRoute element={<MyPaymentOptions />} />} /> {/* Protected route */}
-            <Route path="orders" element={<ProtectedRoute element={<MyOrders />} />} /> {/* Protected route */}
-            <Route path="myorder" element={<ProtectedRoute element={<MyOrder />} />} /> {/* Protected route */}
-            {/* <Route path="wishlist" element={<ProtectedRoute element={<MyWishlist />} />} /> Protected route */}
-            <Route path="discount" element={<ProtectedRoute element={<MyDiscount />} />} /> {/* Protected route */}
-            <Route path="refer-a-friend" element={<ProtectedRoute element={<ReferAFriend />} />} /> {/* Protected route */}
-            <Route path="/account/order/:id" element={<ProtectedRoute element={<MyOrder />} />} /> {/* Protected route */}
+            <Route path="address-book" element={<ProtectedRoute element={<AddressBook />} />} />
+            <Route path="payment-options" element={<ProtectedRoute element={<MyPaymentOptions />} />} />
+            <Route path="orders" element={<ProtectedRoute element={<MyOrders />} />} />
+            <Route path="myorder" element={<ProtectedRoute element={<MyOrder />} />} />
+            <Route path="discount" element={<ProtectedRoute element={<MyDiscount />} />} />
+            <Route path="refer-a-friend" element={<ProtectedRoute element={<ReferAFriend />} />} />
+            <Route path="/account/order/:id" element={<ProtectedRoute element={<MyOrder />} />} />
           </Route>
-
         </Routes>
-
 
         <Footer />
       </div>
