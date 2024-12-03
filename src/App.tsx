@@ -35,7 +35,8 @@ import CategoryBrowser from "./pages/CategoryDetails";
 import ProductSearch from "./components/Input";
 import FlashSalePage from "./pages/FlashSeller";
 import BestSellProduct from "./pages/BestSeller";
-import ProductImageGallery from "./pages/TestC";
+import ProductDetailPage from "./pages/SearchProduct";
+
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -79,6 +80,7 @@ function App() {
           <Route path="/input" element={<ProductSearch></ProductSearch>} />
           <Route path="/flashSale" element={<FlashSalePage></FlashSalePage>} />
           <Route path="/bestselling" element={<BestSellProduct></BestSellProduct>} />
+          <Route path="/product/:id" element={<ProductDetailPage></ProductDetailPage>} />
 
 
 
