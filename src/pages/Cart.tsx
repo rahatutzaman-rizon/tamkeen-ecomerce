@@ -1,214 +1,296 @@
+import React, { useState, useEffect } from 'react';
+import { Trash2, ShoppingCart as CartIcon, Tag, Home, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-import { useState } from "react";
+// Coupon interface
+interface Coupon {
+  code: string;
+  discount: number;
+  type: 'percentage' | 'fixed';
+  minPurchase?: number;
+}
 
+// Product interface
 interface Product {
   id: number;
-  user_id: string;
-  trainer_id: string;
-  course_name: string;
-  regular_price: string;
+  store_id: number;
+  name: string;
+  description: string;
+  price: string;
 }
 
-interface Order {
+// Order interface
+interface OrderItem {
   id: number;
   order_status: string;
-  store_id: number;
   total_price: number;
-  updated_at: string;
-  user_id: number;
+  discountApplied: number;
+  created_at: string;
 }
 
-interface CheckoutProps {
-  discount: number;
-  message: string;
-  orders: Order[];
-  total_price_before_discount: number;
-}
+// Predefined coupons
+const AVAILABLE_COUPONS: Coupon[] = [
+  { code: 'SAVE10', discount: 10, type: 'percentage', minPurchase: 50 },
+  { code: 'WELCOME20', discount: 20, type: 'percentage', minPurchase: 100 },
+  { code: 'FLAT5', discount: 5, type: 'fixed' }
+];
 
-const ShoppingCart = () => {
+const ShoppingCart: React.FC = () => {
+  const navigate = useNavigate();
+
+  // State management
   const [cart, setCart] = useState<Product[]>(() => {
-    const savedCart = localStorage.getItem('cart');
+    const savedCart = localStorage.getItem('cartItems');
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
-  const [orderInfo, setOrderInfo] = useState<CheckoutProps>();
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponError, setCouponError] = useState('');
+
+  const [orderInfo, setOrderInfo] = useState<OrderItem | null>(null);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-  const [coupon, setCoupon] = useState("");
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
 
-  const handleShowToast = (message: string) => {
+  // Update localStorage whenever cart changes
+  useEffect(() => {
+    localStorage.setItem('cartItems', JSON.stringify(cart));
+  }, [cart]);
+
+  // Remove item from cart
+  const removeFromCart = (itemToRemove: Product) => {
+    const updatedCart = cart.filter(item => item.id !== itemToRemove.id);
+    setCart(updatedCart);
+    showToastMessage(`${itemToRemove.name} removed from cart`, 'success');
+  };
+
+  // Show toast notification
+  const showToastMessage = (message: string, type: 'success' | 'error' = 'success') => {
     setToastMessage(message);
+    setToastType(type);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
 
+  // Apply coupon logic
+  const applyCoupon = () => {
+    // Reset previous coupon state
+    setCouponError('');
+    setAppliedCoupon(null);
+
+    // Find matching coupon
+    const matchedCoupon = AVAILABLE_COUPONS.find(
+      coupon => coupon.code.toUpperCase() === couponCode.toUpperCase()
+    );
+
+    if (!matchedCoupon) {
+      setCouponError('Invalid coupon code');
+      showToastMessage('Invalid coupon code', 'error');
+      return;
+    }
+
+    // Check minimum purchase requirement
+    const cartTotal = cart.reduce((total, item) => total + parseFloat(item.price), 0);
+    if (matchedCoupon.minPurchase && cartTotal < matchedCoupon.minPurchase) {
+      setCouponError(`Minimum purchase of $${matchedCoupon.minPurchase} required`);
+      showToastMessage(`Minimum purchase of $${matchedCoupon.minPurchase} required`, 'error');
+      return;
+    }
+
+    // Apply coupon
+    setAppliedCoupon(matchedCoupon);
+    showToastMessage('Coupon applied successfully!', 'success');
+  };
+
+  // Calculate total with potential discount
+  const calculateTotal = () => {
+    const cartTotal = cart.reduce((total, item) => total + parseFloat(item.price), 0);
+    
+    if (!appliedCoupon) return cartTotal;
+
+    if (appliedCoupon.type === 'percentage') {
+      return cartTotal * (1 - appliedCoupon.discount / 100);
+    }
+    
+    return Math.max(0, cartTotal - appliedCoupon.discount);
+  };
+
+  // Checkout process
   const checkout = () => {
+    if (cart.length === 0) {
+      showToastMessage("Cart is empty", 'error');
+      return;
+    }
+
     try {
-      // Simulate checkout process
-      const checkoutResponse: CheckoutProps = {
-        discount: 0,
-        message: "Checkout successful",
-        orders: [{
-          id: 1,
-          order_status: "Processed",
-          store_id: 1,
-          total_price: cart.reduce((total, item) => total + parseFloat(item.regular_price), 0),
-          updated_at: new Date().toISOString(),
-          user_id: 1
-        }],
-        total_price_before_discount: cart.reduce((total, item) => total + parseFloat(item.regular_price), 0)
+      const totalPrice = calculateTotal();
+      const discountApplied = appliedCoupon 
+        ? (appliedCoupon.type === 'percentage' 
+            ? cart.reduce((total, item) => total + parseFloat(item.price), 0) * (appliedCoupon.discount / 100)
+            : appliedCoupon.discount)
+        : 0;
+
+      const newOrder: OrderItem = {
+        id: Date.now(),
+        order_status: "Processed",
+        total_price: totalPrice,
+        discountApplied: discountApplied,
+        created_at: new Date().toISOString()
       };
 
-      setOrderInfo(checkoutResponse);
-      
-      // Clear cart after checkout
-      localStorage.removeItem('cart');
-      setCart([]);
-      
-      handleShowToast("Checkout successful!");
+      setOrderInfo(newOrder);
+      setCart([]); 
+      localStorage.removeItem('cartItems');
+      setAppliedCoupon(null);
+
+      showToastMessage("Checkout successful!");
     } catch (error) {
-      handleShowToast("Checkout failed.");
+      showToastMessage("Checkout failed", 'error');
     }
   };
 
-  return (
-    <div className="font-sans max-w-5xl max-md:max-w-xl mx-auto bg-white py-4">
-      <h1 className="text-3xl font-bold text-gray-800 text-center">
-        Shopping Cart
-      </h1>
+  // Navigate to home page
+  const continueShopping = () => {
+    navigate('/');
+  };
 
-      <div className="grid md:grid-cols-3 gap-8 mt-16">
-        <div className="md:col-span-2 space-y-4">
-          {cart.length > 0 ? (
-            <div>
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold">Courses</h2>
+  return (
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 mt-12">
+      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl overflow-hidden">
+        {/* Header */}
+        <div className="bg-primary text-white px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center">
+            <CartIcon className="mr-3" size={24} />
+            <h1 className="text-2xl font-bold">Shopping Cart</h1>
+          </div>
+          <div className="text-sm">
+            {cart.length} Item{cart.length !== 1 ? 's' : ''}
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8 p-6">
+          {/* Cart Items Section */}
+          <div className="md:col-span-2 space-y-4">
+            {cart.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <CartIcon size={48} className="mx-auto mb-4 text-gray-300" />
+                Your cart is empty
               </div>
-              <div className="divider" />
-              <div className="flex flex-col gap-2">
-                {cart.map((product) => (
-                  <div
-                    key={product.id}
-                    className="card grid py-5 px-8 border border-gray-200 grid-cols-3 items-start gap-4"
-                  >
-                    <div className="col-span-2 flex items-start gap-4">
-                      <div className="w-28 h-28 max-sm:w-24 max-sm:h-24 shrink-0 bg-gray-100 p-2 rounded-md">
-                        <img
-                          src="https://readymadeui.com/images/product14.webp"
-                          className="w-full h-full object-contain"
-                          alt={product.course_name}
-                        />
-                      </div>
-                      <div className="flex flex-col">
-                        <h3 className="text-base font-bold text-gray-800">
-                          {product.course_name}
-                        </h3>
-                        <h3 className="text-base text-gray-800">
-                          ${product.regular_price}
-                        </h3>
-                      </div>
+            ) : (
+              cart.map((item) => (
+                <div 
+                  key={item.id} 
+                  className="bg-white border rounded-lg p-4 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex-grow">
+                    <h3 className="font-bold text-lg text-gray-800">{item.name}</h3>
+                    <p className="text-gray-500 text-sm">{item.description}</p>
+                    <div className="flex items-center mt-2">
+                      <span className="font-semibold text-primary">${item.price}</span>
+                      <span className="ml-2 text-xs text-gray-400">Store ID: {item.store_id}</span>
                     </div>
                   </div>
-                ))}
+                  <button 
+                    onClick={() => removeFromCart(item)}
+                    className="ml-4 text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Order Summary Section */}
+          <div className="border rounded-lg p-6 bg-gray-50">
+            <h3 className="text-xl font-bold border-b pb-3 mb-4 flex items-center">
+              <Tag className="mr-2 text-primary" size={20} />
+              Order Summary
+            </h3>
+            
+            {/* Coupon Section */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Discount Coupon
+              </label>
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  placeholder="Enter coupon code"
+                  className="input input-bordered w-full"
+                />
+                <button 
+                  onClick={applyCoupon}
+                  className="btn btn-primary"
+                >
+                  Apply
+                </button>
+              </div>
+              {couponError && (
+                <p className="text-red-500 text-xs mt-1">{couponError}</p>
+              )}
+              {appliedCoupon && (
+                <div className="mt-2 text-green-600 text-sm">
+                  Coupon applied: {appliedCoupon.code} 
+                  {appliedCoupon.type === 'percentage' 
+                    ? ` (${appliedCoupon.discount}% off)` 
+                    : ` ($${appliedCoupon.discount} off)`}
+                </div>
+              )}
+            </div>
+
+            {/* Price Breakdown */}
+            <div className="space-y-3 border-t pt-4">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span className="font-bold">
+                  ${cart.reduce((total, item) => total + parseFloat(item.price), 0).toFixed(2)}
+                </span>
+              </div>
+              {appliedCoupon && (
+                <div className="flex justify-between text-green-600">
+                  <span>Discount</span>
+                  <span className="font-bold">
+                    -${(cart.reduce((total, item) => total + parseFloat(item.price), 0) * (appliedCoupon.discount / 100)).toFixed(2)}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between font-bold text-lg border-t pt-2">
+                <span>Total</span>
+                <span>${calculateTotal().toFixed(2)}</span>
               </div>
             </div>
-          ) : (
-            <p className="text-center text-gray-500">
-              There are no items in the cart
-            </p>
-          )}
-        </div>
-        
-        {/* Order Summary */}
-        <div className="border border-gray-200 rounded-md p-4 h-max">
-          <h3 className="text-lg max-sm:text-base font-bold text-gray-800 border-b border-gray-300 pb-2">
-            Order Summary
-          </h3>
 
-          <ul className="text-gray-800 mt-6 space-y-3">
-            {orderInfo && (
-              <>
-                <li className="flex justify-between text-sm">
-                  Subtotal{" "}
-                  <span className="font-bold">
-                    ${orderInfo.orders[0].total_price.toFixed(2)}
-                  </span>
-                </li>
-                <li className="flex justify-between text-sm">
-                  Order Status
-                  <span className="font-bold">
-                    {orderInfo.orders[0].order_status}
-                  </span>
-                </li>
-              </>
-            )}
-            {!orderInfo && cart.length > 0 && (
-              <li className="flex justify-between text-sm">
-                Subtotal{" "}
-                <span className="font-bold">
-                  ${cart.reduce((total, item) => total + parseFloat(item.regular_price), 0).toFixed(2)}
-                </span>
-              </li>
-            )}
-          </ul>
-
-          <div className="mt-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Discount Code
-            </label>
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                placeholder="Enter discount code"
-                className="input input-bordered w-full text-sm"
-                onChange={(e) => setCoupon(e.target.value)}
-              />
-              <button
-                onClick={() => setCoupon(coupon)}
-                className="btn text-white btn-primary text-sm"
+            {/* Action Buttons */}
+            <div className="mt-6 space-y-3">
+              <button 
+                onClick={checkout}
+                disabled={cart.length === 0}
+                className="btn btn-primary w-full"
               >
-                Apply
+                Proceed to Checkout
+                <ArrowRight className="ml-2" size={20} />
+              </button>
+              <button 
+                onClick={continueShopping}
+                className="btn btn-outline btn-primary w-full"
+              >
+                <Home className="mr-2" size={20} />
+                Continue Shopping
               </button>
             </div>
           </div>
-
-          <div className="mt-6 space-y-3">
-            <button 
-              onClick={checkout}
-              disabled={cart.length === 0}
-              className="btn text-white btn-primary w-full text-sm"
-            >
-              Checkout
-            </button>
-            <button className="btn btn-outline btn-primary w-full text-sm">
-              Continue Shopping
-            </button>
-          </div>
         </div>
       </div>
-      
+
+      {/* Toast Notification */}
       {showToast && (
-        <div className="toast toast-bottom toast-center min-w-[35vw] z-50">
-          <div className="alert bg-primary text-wrap text-white">
-            <div>
-              <span>{toastMessage}</span>
-            </div>
-            <div className="cursor-pointer" onClick={() => setShowToast(false)}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </div>
+        <div className={`toast toast-bottom toast-center z-50`}>
+          <div className={`alert ${toastType === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`}>
+            <span>{toastMessage}</span>
           </div>
         </div>
       )}
