@@ -343,13 +343,15 @@ const LandingPage = () => {
 
 
       {/* Bento Grid Section */}
-      <section className="container max-w-7xl sm:px-10 h-auto">
+      <section className="container max-w-8xl sm:px-10 h-auto">
+        <Link to="/categories/17">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {bentoGrid.map((item) => (
             <div
               key={item.id}
               className={`flex flex-col p-4 sm:p-8 justify-between items-center ${item.class} `}
             >
+              
               <div className="flex flex-col justify-around">
                 <div>
                   <p>{item.title}</p>
@@ -373,6 +375,7 @@ const LandingPage = () => {
             </div>
           ))}
         </div>
+        </Link>
       </section>
 
       <section className="container flex flex-col gap-10">
