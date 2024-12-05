@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2, ShoppingCart as CartIcon, Tag, Home, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 // Coupon interface
 interface Coupon {
@@ -266,14 +266,17 @@ const ShoppingCart: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="mt-6 space-y-3">
-              <button 
+             <Link to="/checkout">
+             <button 
                 onClick={checkout}
                 disabled={cart.length === 0}
                 className="btn btn-primary w-full"
               >
                 Proceed to Checkout
                 <ArrowRight className="ml-2" size={20} />
-              </button>
+              </button> 
+             
+             </Link>
               <button 
                 onClick={continueShopping}
                 className="btn btn-outline btn-primary w-full"

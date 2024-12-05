@@ -6,6 +6,7 @@ import decor from "../assets/Decor.png";
 import hats from "../assets/Hats.png";
 import jewelry from "../assets/jewelry.png";
 import ProductCard from "./ProductCardComp";
+import { Wallet, PackageOpen, CreditCard } from 'lucide-react';
 
 import { FaArrowRightLong } from "react-icons/fa6";
 import NewArrivalProducts from "../components/NewArrival";
@@ -81,7 +82,15 @@ const DEMO_PACKAGES = [
     total_price: "25000.00",
     number_of_uses: 250,
     description: "Premium financial growth plan"
-  }
+  },
+
+  {
+  id: 4,
+  name: "Diamond Investment Bundle",
+  total_price: "40000.00", 
+  number_of_uses: 400,
+  description: "Comprehensive investment strategy"
+}
 ];
 
 
@@ -282,40 +291,61 @@ const LandingPage = () => {
 
 
 {/* basket */}
-<section className="container px-4 sm:px-20 flex flex-col gap-10 items-center mx-auto">
-      <div className="w-full flex items-start justify-start">
-        <p className="text-lg sm:text-xl text-primary">Savings baskets</p>
-      </div>
-      
-      <div className="flex flex-wrap gap-6 place-items-start w-full">
-        {isPackagesLoading 
-          ? Array(5).fill(0).map((_, index) => (
-            <div key={index} className="flex w-64 flex-col gap-4">
-              <div className="skeleton h-32 w-full"></div>
-              <div className="skeleton h-4 w-28"></div>
-              <div className="skeleton h-4 w-full"></div>
-              <div className="skeleton h-4 w-full"></div>
-            </div>
-          ))
-          : packages.map((basket) => (
-            <div 
-              key={basket.id} 
-              className="card w-64 bg-base-100 shadow-xl hover:shadow-2xl transition-shadow"
-            >
-              <div className="card-body">
-                <h2 className="card-title">{basket.name}</h2>
-                <p>Price: {parseFloat(basket.total_price).toLocaleString()} SAR</p>
-                <p>Uses: {basket.number_of_uses.toLocaleString()}</p>
-              
-              </div>
-            </div>
-          ))
-        }
+<section className="container px-4 sm:px-20 py-10 mx-auto">
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-2xl font-bold text-sky-700 flex items-center gap-3">
+          <Wallet className="w-8 h-8 text-sky-500" />
+          Savings Baskets
+        </h2>
       </div>
 
-      <div>
-        <Link to="/category" className="btn btn-primary text-white">
-          View all Baskets
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {isPackagesLoading
+          ? Array(4).fill(0).map((_, index) => (
+              <div 
+                key={index} 
+                className="bg-white rounded-xl shadow-md overflow-hidden animate-pulse"
+              >
+                <div className="p-6">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-full"></div>
+                </div>
+              </div>
+            ))
+          : packages.map((basket) => (
+              <div 
+                key={basket.id} 
+                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-2 border border-gray-100"
+              >
+                <div className="p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-semibold text-sky-800 flex items-center gap-2">
+                      <PackageOpen className="w-6 h-6 text-sky-500" />
+                      {basket.name}
+                    </h3>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-gray-600 flex items-center gap-2">
+                      <CreditCard className="w-5 h-5 text-sky-400" />
+                      Price: {parseFloat(basket.total_price).toLocaleString()} SAR
+                    </p>
+                    <p className="text-gray-600">
+                      Uses: {basket.number_of_uses.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+      </div>
+
+      <div className="flex justify-center mt-10">
+        <Link 
+          to="/categories/19" 
+          className="px-6 py-3 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors flex items-center gap-2 shadow-md"
+        >
+          View All Baskets
+          <PackageOpen className="w-5 h-5" />
         </Link>
       </div>
     </section>
