@@ -8,7 +8,7 @@ import StorePage from "./pages/StorePage";
 import ContactUs from "./pages/ContactUs";
 import Categories from "./pages/Categories";
 import ProductPage from "./pages/ProductPage";
-import ShoppingCart from "./pages/Cart";
+
 import Checkout from "./pages/Checkout";
 import Invoice from "./pages/Invoice";
 import Reviews from "./pages/ShareOpinion";
@@ -36,6 +36,7 @@ import FlashSalePage from "./pages/FlashSeller";
 import BestSellProduct from "./pages/BestSeller";
 import ProductDetailPage from "./pages/SearchProduct";
 import BestProductDetails from "./pages/BestSellerDetails";
+import TabsComponent from "./pages/Cart";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -116,7 +117,7 @@ function App() {
           <Route path="/invoice" element={<ProtectedRoute element={<Invoice />} />} />
           <Route path="/categories/:slug/review" element={<ProtectedRoute element={<Reviews />} />} />
           <Route path="wishlist" element={<ProtectedRoute element={<MyWishlist />} />} />
-          <Route path="/cart" element={<ProtectedRoute element={<ShoppingCart />} />} />
+          <Route path="/cart" element={<ProtectedRoute element={<TabsComponent />} />} />
         </Routes>
 
         <Footer />

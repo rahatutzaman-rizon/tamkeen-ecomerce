@@ -46,7 +46,7 @@ const BasketDisplay = () => {
     }
 
     // Retrieve existing cart items from local storage
-    const existingCartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+    const existingCartItems = JSON.parse(localStorage.getItem('basket') || '[]');
 
     // Check if product already exists in cart
     const existingProductIndex = existingCartItems.findIndex((item) => item.id === product.id);
@@ -61,7 +61,7 @@ const BasketDisplay = () => {
     }
 
     // Save updated cart to local storage
-    localStorage.setItem('cartItems', JSON.stringify(existingCartItems));
+    localStorage.setItem('basket', JSON.stringify(existingCartItems));
 
     // Show success toast
     toast.success(`${product.name} added to cart`, {

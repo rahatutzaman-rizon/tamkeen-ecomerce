@@ -1,125 +1,144 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Trash2, 
+  ShoppingCart as CartIcon, 
+  Tag, 
+  Home, 
+  ArrowRight, 
   Plus, 
   Minus, 
-  ShoppingCart, 
-  Tags, 
-  
-  Tag,
-  ArrowRight,
-  Home
+  Tags 
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-// Type definition for cart item
-interface CartItem {
+
+// Interfaces
+interface Product {
   id: number;
   name: string;
   price: string;
-  quantity: number;
-  image?: string | null;
+  description?: string;
+  image?: string;
+  quantity?: number;
 }
 
-// Coupon interface
 interface Coupon {
   code: string;
-  type: 'percentage' | 'fixed';
   discount: number;
+  type: 'percentage' | 'fixed';
+  minPurchase?: number;
 }
 
-const CartPage: React.FC = () => {
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [couponCode, setCouponCode] = useState<string>('');
-  const [couponError, setCouponError] = useState<string>('');
-  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+const ShoppingCart: React.FC = () => {
+  const navigate = useNavigate();
 
-  // Predefined coupon options
-  const COUPONS: Coupon[] = [
-    { code: 'SAVE10', type: 'percentage', discount: 10 },
-    { code: 'SUMMER20', type: 'percentage', discount: 20 },
-    { code: 'FLAT5', type: 'fixed', discount: 5 }
+  // State Management
+  const [cart, setCart] = useState<Product[]>(() => {
+    const savedCart = localStorage.getItem('cartItems');
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
+
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponError, setCouponError] = useState('');
+
+  // Predefined Coupons
+  const AVAILABLE_COUPONS: Coupon[] = [
+    { code: 'SAVE10', discount: 10, type: 'percentage', minPurchase: 50 },
+    { code: 'WELCOME20', discount: 20, type: 'percentage', minPurchase: 100 },
+    { code: 'FLAT5', discount: 5, type: 'fixed' }
   ];
 
+  // Update localStorage when cart changes
   useEffect(() => {
-    // Load cart from local storage
-    const savedCart = localStorage.getItem('basket');
-    if (savedCart) {
-      setCart(JSON.parse(savedCart));
-    }
-  }, []);
+    localStorage.setItem('cartItems', JSON.stringify(cart));
+  }, [cart]);
 
-  const updateQuantity = (id: number, newQuantity: number) => {
+  // Update Quantity of an item
+  const updateQuantity = (itemId: number, newQuantity: number) => {
+    if (newQuantity < 1) {
+      removeItem(itemId);
+      return;
+    }
+
     const updatedCart = cart.map(item => 
-      item.id === id 
-        ? { ...item, quantity: Math.max(1, newQuantity) }
-        : item
+      item.id === itemId ? { ...item, quantity: newQuantity } : item
     );
     setCart(updatedCart);
-    localStorage.setItem('basket', JSON.stringify(updatedCart));
   };
 
-  const removeItem = (id: number) => {
-    const updatedCart = cart.filter(item => item.id !== id);
+  // Remove Item from Cart
+  const removeItem = (itemId: number) => {
+    const updatedCart = cart.filter(item => item.id !== itemId);
     setCart(updatedCart);
-    localStorage.setItem('basket', JSON.stringify(updatedCart));
   };
 
+  // Apply Coupon Logic
   const applyCoupon = () => {
-    // Reset previous coupon state
     setCouponError('');
-    setAppliedCoupon(null);
-
-    // Find matching coupon
-    const foundCoupon = COUPONS.find(
+    const matchedCoupon = AVAILABLE_COUPONS.find(
       coupon => coupon.code.toUpperCase() === couponCode.toUpperCase()
     );
 
-    if (foundCoupon) {
-      setAppliedCoupon(foundCoupon);
-    } else {
+    if (!matchedCoupon) {
       setCouponError('Invalid coupon code');
+      return;
     }
-  };
 
-  const calculateTotal = () => {
-    const subtotal = cart.reduce(
-      (total, item) => total + parseFloat(item.total_price) * item.quantity, 
-      0
+    const cartTotal = cart.reduce((total, item) => 
+      total + parseFloat(item.price) * (item.quantity || 1), 0
     );
 
-    if (appliedCoupon) {
-      if (appliedCoupon.type === 'percentage') {
-        return subtotal * (1 - appliedCoupon.discount / 100);
-      } else {
-        return Math.max(0, subtotal - appliedCoupon.discount);
-      }
+    if (matchedCoupon.minPurchase && cartTotal < matchedCoupon.minPurchase) {
+      setCouponError(`Minimum purchase of $${matchedCoupon.minPurchase} required`);
+      return;
     }
 
-    return subtotal;
+    setAppliedCoupon(matchedCoupon);
   };
 
-  const continueShopping = () => {
-    // Navigate to product listing page
-    window.location.href = '/';
+  // Calculate Total with Potential Discount
+  const calculateTotal = () => {
+    const cartTotal = cart.reduce((total, item) => 
+      total + parseFloat(item.price) * (item.quantity || 1), 0
+    );
+
+    if (!appliedCoupon) return cartTotal;
+
+    if (appliedCoupon.type === 'percentage') {
+      return cartTotal * (1 - appliedCoupon.discount / 100);
+    }
+
+    return Math.max(0, cartTotal - appliedCoupon.discount);
   };
 
+  // Checkout Process
   const checkout = () => {
-    // Navigate to checkout page
-    window.location.href = '/checkout';
+    if (cart.length === 0) {
+      alert("Cart is empty");
+      return;
+    }
+
+    // Add your checkout logic here
+    navigate('/checkout');
+  };
+
+  // Continue Shopping
+  const continueShopping = () => {
+    navigate('/');
   };
 
   return (
-    <div className="min-h-screen bg-sky-50 py-12 px-4 sm:px-6 lg:px-8 mt-12">
+    <div className="min-h-screen bg-sky-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Side: Cart Items */}
           <div className="bg-white shadow-xl rounded-xl border border-sky-100 p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-3">
-                <ShoppingCart size={28} className="text-sky-600" />
+                <CartIcon size={28} className="text-sky-600" />
                 <h2 className="text-2xl font-bold text-sky-800">
-                  Basket cart
+                  Your Cart
                 </h2>
               </div>
               <div className="bg-sky-100 text-sky-700 px-3 py-1 rounded-full text-sm">
@@ -129,7 +148,7 @@ const CartPage: React.FC = () => {
 
             {cart.length === 0 ? (
               <div className="text-center py-12">
-                <ShoppingCart size={64} className="mx-auto text-sky-300 mb-4" />
+                <CartIcon size={64} className="mx-auto text-sky-300 mb-4" />
                 <p className="text-xl text-sky-700">
                   Your cart is empty
                 </p>
@@ -165,7 +184,7 @@ const CartPage: React.FC = () => {
                         {item.name}
                       </h3>
                       <p className="text-sky-600">
-                        ${item.total_price}
+                        ${item.price}
                       </p>
                     </div>
 
@@ -173,16 +192,16 @@ const CartPage: React.FC = () => {
                     <div className="flex items-center space-x-3">
                       <div className="flex items-center border border-sky-200 rounded-md">
                         <button 
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.id, (item.quantity || 1) - 1)}
                           className="px-2 py-1 text-sky-600 hover:bg-sky-100"
                         >
                           <Minus size={16} />
                         </button>
                         <span className="px-3 text-sky-800">
-                          {item.quantity}
+                          {item.quantity || 1}
                         </span>
                         <button 
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.id, (item.quantity || 1) + 1)}
                           className="px-2 py-1 text-sky-600 hover:bg-sky-100"
                         >
                           <Plus size={16} />
@@ -246,14 +265,14 @@ const CartPage: React.FC = () => {
               <div className="flex justify-between">
                 <span className="text-sky-700">Subtotal</span>
                 <span className="font-bold text-sky-900">
-                  ${cart.reduce((total, item) => total + parseFloat(item.total_price) * item.quantity, 0).toFixed(2)}
+                  ${cart.reduce((total, item) => total + parseFloat(item.price) * (item.quantity || 1), 0).toFixed(2)}
                 </span>
               </div>
               {appliedCoupon && (
                 <div className="flex justify-between text-green-600">
                   <span>Discount</span>
                   <span className="font-bold">
-                    -${(cart.reduce((total, item) => total + parseFloat(item.total_price) * item.quantity, 0) * (appliedCoupon.discount / 100)).toFixed(2)}
+                    -${(cart.reduce((total, item) => total + parseFloat(item.price) * (item.quantity || 1), 0) * (appliedCoupon.discount / 100)).toFixed(2)}
                   </span>
                 </div>
               )}
@@ -265,16 +284,14 @@ const CartPage: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="mt-6 space-y-3">
-              <Link to="/checkout">
-                <button 
-                  onClick={checkout}
-                  disabled={cart.length === 0}
-                  className="w-full bg-sky-600 text-white py-3 rounded-md hover:bg-sky-700 transition-colors flex items-center justify-center"
-                >
-                  Proceed to Checkout
-                  <ArrowRight className="ml-2" size={20} />
-                </button> 
-              </Link>
+              <button 
+                onClick={checkout}
+                disabled={cart.length === 0}
+                className="w-full bg-sky-600 text-white py-3 rounded-md hover:bg-sky-700 transition-colors flex items-center justify-center"
+              >
+                Proceed to Checkout
+                <ArrowRight className="ml-2" size={20} />
+              </button> 
               <button 
                 onClick={continueShopping}
                 className="w-full border border-sky-600 text-sky-700 py-3 rounded-md hover:bg-sky-100 transition-colors flex items-center justify-center"
@@ -286,8 +303,9 @@ const CartPage: React.FC = () => {
           </div>
         </div>
       </div>
+   
     </div>
   );
 };
 
-export default CartPage;
+export default ShoppingCart;
