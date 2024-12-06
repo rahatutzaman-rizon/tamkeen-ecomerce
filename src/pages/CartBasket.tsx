@@ -5,8 +5,7 @@ import {
   Minus, 
   ShoppingCart, 
   Tags, 
-  CreditCard,
-  TicketPercent,
+  
   Tag,
   ArrowRight,
   Home

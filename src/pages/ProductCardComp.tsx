@@ -2,6 +2,8 @@ import React from 'react';
 import { ShoppingCart, Star, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast, Toaster } from 'react-hot-toast';
+import { useAtom } from 'jotai';
+import { authAtom } from '../atoms/authAtom'; // Update this import path if needed
 
 type Product = {
     id: number;
@@ -24,8 +26,14 @@ type ProductCardProps = {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     const navigate = useNavigate();
+    const [auth] = useAtom(authAtom);
 
     const addToCart = () => {
+        if (!auth.isAuthenticated) {
+            toast.error('You need to log in to add products to your cart');
+            return;
+        }
+
         if (product.stock === 0) {
             toast.error('Product out of stock');
             return;
@@ -39,7 +47,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
         if (existingProductIndex > -1) {
             // If product exists, increase quantity
-            existingCartItems[existingProductIndex].quantity = 
+            existingCartItems[existingProductIndex].quantity =
                 (existingCartItems[existingProductIndex].quantity || 1) + 1;
         } else {
             // If product doesn't exist, add new product with quantity
@@ -53,9 +61,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         toast.success(`${product.name} added to cart`);
     };
 
-    if (product == null) {
-        console.log("product null")
-    }
     return (
         <>
             <Toaster position="top-right" reverseOrder={false} />
@@ -117,10 +122,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                             </div>
                         </div>
                         <span
-                            className={`
-                                text-xs font-semibold px-3 py-1 rounded-full
-                                ${product.stock > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}
-                            `}
+                            className={`text-xs font-semibold px-3 py-1 rounded-full
+                                ${product.stock > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}
                         >
                             {product.stock > 0 ? `In Stock: ${product.stock}` : 'Out of Stock'}
                         </span>
@@ -128,13 +131,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
                     <div className="flex space-x-2">
                         <button
-                            className="
-                                w-full bg-sky-600 text-white py-3 rounded-lg 
-                                flex items-center justify-center space-x-3
+                            className="w-full bg-sky-600 text-white py-3 rounded-lg flex items-center justify-center space-x-3
                                 hover:bg-sky-700 transition duration-300
                                 disabled:bg-sky-300 disabled:cursor-not-allowed
-                                transform active:scale-95
-                            "
+                                transform active:scale-95"
                             disabled={product.stock === 0}
                             onClick={addToCart}
                         >
@@ -143,11 +143,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                         </button>
 
                         <button
-                            className="
-                                flex items-center justify-center bg-gray-500 text-white p-3 rounded-lg
+                            className="flex items-center justify-center bg-gray-500 text-white p-3 rounded-lg
                                 hover:bg-gray-600 transition duration-300
-                                transform active:scale-95
-                            "
+                                transform active:scale-95"
                             onClick={() => navigate(`/product/${product.id}`)}
                         >
                             <Eye className="w-6 h-6" />

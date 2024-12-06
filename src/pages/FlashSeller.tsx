@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Flame } from 'lucide-react';
-import ProductCard from './ProductCardComp'; // Importing the external ProductCard component
+import { useAtom } from 'jotai';
+import { ShoppingCart, Star, Flame } from 'lucide-react';
+import { authAtom } from '../atoms/authAtom'; // Update with the correct path to your authAtom
 
+// Define the type for product data
 type FlashSaleProduct = {
   id: number;
   store_id: number;
@@ -21,24 +23,23 @@ type FlashSaleProduct = {
 const FlashSalePage: React.FC = () => {
   const [products, setProducts] = useState<FlashSaleProduct[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [auth] = useAtom(authAtom);
 
   useEffect(() => {
-    const fetchFlashSaleProducts = async () => {
+    const fetchBestSellingProducts = async () => {
       try {
-        const response = await axios.get('https://api.tamkeen.center/api/flash-sales');
+        const response = await axios.get('https://api.tamkeen.center/api/best-selling-products');
         setProducts(response.data);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching flash sale products:', error);
+        console.error('Error fetching best-selling products:', error);
         setLoading(false);
       }
     };
 
-    fetchFlashSaleProducts();
+    fetchBestSellingProducts();
   }, []);
-  const handleAddToCart = (id: number) => {
-    console.log(`Added product ${id} to cart`);
-  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-sky-50">
@@ -57,22 +58,102 @@ const FlashSalePage: React.FC = () => {
             <Flame className="w-8 h-8 text-sky-600" />
           </div>
           <h1 className="text-4xl font-extrabold text-sky-900 tracking-tight">
-            Flash Sale Products
+            Flash Sale - Best Selling Products
           </h1>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {products.length > 0 ? (
-            products.map(product => (
-              <ProductCard
+            products.map((product) => (
+              <div
                 key={product.id}
-                product={product}
-                onAddToCart={handleAddToCart}
-              />
+                className="
+                  bg-white rounded-2xl shadow-lg overflow-hidden 
+                  transition-all duration-300 
+                  hover:shadow-xl hover:-translate-y-2
+                  border border-sky-100
+                "
+              >
+                <div className="relative h-56 bg-sky-50 flex items-center justify-center overflow-hidden">
+                  {product.cover_image ? (
+                    <img
+                      src={`https://api.tamkeen.center/${product.cover_image}`}
+                      alt={product.name}
+                      className="h-full w-full object-cover transition-transform duration-300 hover:scale-110"
+                    />
+                  ) : (
+                    <span className="text-sky-500 text-lg">No Image</span>
+                  )}
+                  <div className="absolute top-0 left-0 right-0 flex justify-between p-3">
+                    {product.rating && (
+                      <div className="bg-amber-400 text-white px-3 py-1 rounded-full flex items-center shadow-md">
+                        <Star className="w-4 h-4 mr-1" fill="white" />
+                        {product.rating}
+                      </div>
+                    )}
+                    <div className="bg-sky-500 text-white px-2 py-1 rounded-full text-xs shadow-md">
+                      {product.orders_count} Sold
+                    </div>
+                  </div>
+                </div>
+                <div className="p-5">
+                  <h3 className="text-xl font-bold text-sky-900 mb-3 truncate">{product.name}</h3>
+                  <p className="text-sm text-sky-700 mb-4 line-clamp-2">{product.description}</p>
+
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <div className="flex items-center">
+                        <p className="text-sky-700 font-bold text-2xl mr-3">${product.discounted_price}</p>
+                        {product.price !== product.discounted_price && (
+                          <span className="text-sky-500 line-through text-sm">
+                            ${product.price}
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-1 space-x-2">
+                        {product.size && (
+                          <span className="text-xs text-sky-600 bg-sky-100 px-2 py-1 rounded-full">
+                            Size: {product.size}
+                          </span>
+                        )}
+                        {product.color && (
+                          <span className="text-xs text-sky-600 bg-sky-100 px-2 py-1 rounded-full">
+                            Color: {product.color}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span
+                      className={`
+                        text-xs font-semibold px-3 py-1 rounded-full
+                        ${product.stock > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}
+                      `}
+                    >
+                      {product.stock > 0 ? `In Stock: ${product.stock}` : 'Out of Stock'}
+                    </span>
+                  </div>
+
+                  {auth.isAuthenticated && (
+                    <button
+                      className="
+                        w-full bg-sky-600 text-white py-3 rounded-lg 
+                        flex items-center justify-center space-x-3
+                        hover:bg-sky-700 transition duration-300
+                        transform active:scale-95
+                      "
+                      disabled={product.stock === 0}
+                      onClick={() => console.log(`Added product ${product.id} to cart`)}
+                    >
+                      <ShoppingCart className="w-6 h-6" />
+                      <span className="font-semibold">Add to Cart</span>
+                    </button>
+                  )}
+                </div>
+              </div>
             ))
           ) : (
             <div className="col-span-full text-center mt-24 py-10 text-sky-500">
-              No flash sale products found
+              No best-selling products found
             </div>
           )}
         </div>

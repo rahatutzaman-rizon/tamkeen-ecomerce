@@ -6,7 +6,7 @@ import decor from "../assets/Decor.png";
 import hats from "../assets/Hats.png";
 import jewelry from "../assets/jewelry.png";
 import ProductCard from "./ProductCardComp";
-import { Wallet, PackageOpen, CreditCard } from 'lucide-react';
+import { Wallet, PackageOpen, } from 'lucide-react';
 
 import { FaArrowRightLong } from "react-icons/fa6";
 import NewArrivalProducts from "../components/NewArrival";
@@ -55,12 +55,6 @@ type Product = {
   orders_count: number;
 };
 
-// interface Package {
-//   id: number;
-//   name: string;
-//   total_price: string;
-//   number_of_uses: number;
-// }
 
 const DEMO_PACKAGES = [
   {
