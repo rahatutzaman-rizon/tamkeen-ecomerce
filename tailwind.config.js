@@ -5,7 +5,7 @@ export default {
     themes: [
       {
         light: {
-          ...require("daisyui/src/theming/themes")["light"],
+     
           primary: "#27AAE1",
           secondary: "#091242",
         },
