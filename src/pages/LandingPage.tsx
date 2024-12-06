@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import shoes from "../assets/blue sneakers.png";
 import sofa from "../assets/sofa.png";
 import toyTrain from "../assets/toyTrain.png";

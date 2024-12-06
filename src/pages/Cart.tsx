@@ -52,7 +52,7 @@ const ShoppingCart: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<'success' | 'error'>('success');
-
+console.log(orderInfo)
   // Update localStorage whenever cart changes
   useEffect(() => {
     localStorage.setItem('cartItems', JSON.stringify(cart));
