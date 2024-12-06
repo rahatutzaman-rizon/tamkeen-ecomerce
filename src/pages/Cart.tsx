@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, ShoppingCart as CartIcon, Tag, Home, ArrowRight } from 'lucide-react';
+import { Trash2, ShoppingCart as CartIcon, Tag, Home, ArrowRight, Box, Database } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import CartBasket from './CartBasket';
 
 // Coupon interface
 interface Coupon {
@@ -17,6 +18,23 @@ interface Product {
   name: string;
   description: string;
   price: string;
+}
+
+// Basket Item interface
+interface BasketItem {
+  id: number;
+  name: string;
+  total_price: string;
+  number_of_uses: number;
+  profit_percentage_in_level_1: number | null;
+  profit_percentage_in_level_2: number | null;
+  profit_percentage_in_level_3: number | null;
+  created_at: string;
+  updated_at: string;
+  store_id: number;
+  image: string | null;
+  images: any[];
+  quantity: number;
 }
 
 // Order interface
@@ -44,6 +62,12 @@ const ShoppingCart: React.FC = () => {
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
+  // New state for basket items
+  const [basketItems, setBasketItems] = useState<BasketItem[]>(() => {
+    const savedBasketItems = localStorage.getItem('basketItems');
+    return savedBasketItems ? JSON.parse(savedBasketItems) : [];
+  });
+
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [couponError, setCouponError] = useState('');
@@ -52,17 +76,28 @@ const ShoppingCart: React.FC = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<'success' | 'error'>('success');
-console.log(orderInfo)
-  // Update localStorage whenever cart changes
+
+  // Update localStorage whenever cart and basket items change
   useEffect(() => {
     localStorage.setItem('cartItems', JSON.stringify(cart));
   }, [cart]);
+
+  useEffect(() => {
+    localStorage.setItem('basketItems', JSON.stringify(basketItems));
+  }, [basketItems]);
 
   // Remove item from cart
   const removeFromCart = (itemToRemove: Product) => {
     const updatedCart = cart.filter(item => item.id !== itemToRemove.id);
     setCart(updatedCart);
     showToastMessage(`${itemToRemove.name} removed from cart`, 'success');
+  };
+
+  // Remove basket item
+  const removeBasketItem = (itemToRemove: BasketItem) => {
+    const updatedBasketItems = basketItems.filter(item => item.id !== itemToRemove.id);
+    setBasketItems(updatedBasketItems);
+    showToastMessage(`${itemToRemove.name} removed from basket`, 'success');
   };
 
   // Show toast notification
@@ -157,21 +192,22 @@ console.log(orderInfo)
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 mt-12">
-      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl overflow-hidden">
-        {/* Header */}
-        <div className="bg-primary text-white px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <CartIcon className="mr-3" size={24} />
-            <h1 className="text-2xl font-bold">Shopping Cart</h1>
-          </div>
-          <div className="text-sm">
-            {cart.length} Item{cart.length !== 1 ? 's' : ''}
-          </div>
-        </div>
-
+      <div className="max-w-5xl mx-auto bg-white shadow-lg rounded-xl overflow-hidden">
+        {/* Main Cart Section */}
         <div className="grid md:grid-cols-3 gap-8 p-6">
           {/* Cart Items Section */}
           <div className="md:col-span-2 space-y-4">
+            {/* Shopping Cart */}
+            <div className="bg-primary text-white px-6 py-4 flex justify-between items-center rounded-t-xl">
+              <div className="flex items-center">
+                <CartIcon className="mr-3" size={24} />
+                <h1 className="text-2xl font-bold">Shopping Cart</h1>
+              </div>
+              <div className="text-sm">
+                {cart.length} Item{cart.length !== 1 ? 's' : ''}
+              </div>
+            </div>
+
             {cart.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <CartIcon size={48} className="mx-auto mb-4 text-gray-300" />
@@ -287,9 +323,58 @@ console.log(orderInfo)
             </div>
           </div>
         </div>
+
+        {/* Basket Items Section */}
+        <div className="bg-gray-100 p-6">
+          <div className="bg-primary text-white px-6 py-4 flex justify-between items-center rounded-t-xl">
+            <div className="flex items-center">
+              <Box className="mr-3" size={24} />
+              <h1 className="text-2xl font-bold">Basket Items</h1>
+            </div>
+            <div className="text-sm">
+              {basketItems.length} Item{basketItems.length !== 1 ? 's' : ''}
+            </div>
+          </div>
+
+          {basketItems.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <Database size={48} className="mx-auto mb-4 text-gray-300" />
+            <CartBasket></CartBasket>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {basketItems.map((item) => (
+                <div 
+                  key={item.id} 
+                  className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-lg text-gray-800">{item.name}</h3>
+                    <button 
+                      onClick={() => removeBasketItem(item)}
+                      className="text-red-500 hover:bg-red-50 p-1 rounded-full transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                  <div className="space-y-1 text-sm text-gray-600">
+                    <p>Price: ${item.total_price}</p>
+                    <p>Store ID: {item.store_id}</p>
+                    <p>Created: {new Date(item.created_at).toLocaleDateString()}</p>
+                    <p>Number of Uses: {item.number_of_uses}</p>
+                    {item.profit_percentage_in_level_1 !== null && (
+                      <div className="mt-2 text-xs text-gray-500">
+                        <span>Level 1 Profit: {item.profit_percentage_in_level_1}%</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Toast Notification */}
       {showToast && (
         <div className={`toast toast-bottom toast-center z-50`}>
           <div className={`alert ${toastType === 'success' ? 'bg-green-500' : 'bg-red-500'} text-white`}>

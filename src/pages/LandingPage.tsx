@@ -38,6 +38,7 @@ import CouponCard from "../components/CouponCard";
 import { authAtom } from "../atoms/authAtom";
 import { useAtom } from "jotai";
 import axios from "axios";
+import BasketDisplay from './BasketBox';
 
 type Product = {
   id: number;
@@ -299,7 +300,7 @@ const LandingPage = () => {
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {isPackagesLoading
           ? Array(4).fill(0).map((_, index) => (
               <div 
@@ -337,7 +338,8 @@ const LandingPage = () => {
                 </div>
               </div>
             ))}
-      </div>
+      </div> */}
+      <BasketDisplay></BasketDisplay>
 
       <div className="flex justify-center mt-10">
         <Link 

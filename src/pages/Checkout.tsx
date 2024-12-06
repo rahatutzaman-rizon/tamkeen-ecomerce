@@ -29,7 +29,7 @@ const Checkout = () => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen flex items-center justify-center p-6">
+    <div className="bg-gray-50 min-h-screen flex items-center justify-center p-6 mt-12">
       <Toaster position="top-right" />
       <div className="container mx-auto bg-white shadow-2xl rounded-2xl overflow-hidden">
         <div className="flex flex-col lg:flex-row">
