@@ -9,7 +9,7 @@ export default {
       {
         light: {
           // Extend the default light theme
-          ...require("daisyui/src/theming/themes")["light"],
+         
           // Custom primary color
           primary: "#27AAE1",
           // Custom secondary color
