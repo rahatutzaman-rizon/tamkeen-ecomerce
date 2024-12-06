@@ -1,3 +1,5 @@
+import daisyui from "daisyui"
+
 /** @type {import('tailwindcss').Config} */ 
 export default {
   // Specify which files should be processed by Tailwind
@@ -30,5 +32,7 @@ export default {
   },
   
   // Include DaisyUI plugin
-  plugins: [require("daisyui")],
+  plugins: [
+    daisyui,
+  ],
 };
