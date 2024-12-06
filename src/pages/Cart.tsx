@@ -331,47 +331,13 @@ const ShoppingCart: React.FC = () => {
               <Box className="mr-3" size={24} />
               <h1 className="text-2xl font-bold">Basket Items</h1>
             </div>
-            <div className="text-sm">
-              {basketItems.length} Item{basketItems.length !== 1 ? 's' : ''}
-            </div>
+           
           </div>
 
-          {basketItems.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <Database size={48} className="mx-auto mb-4 text-gray-300" />
+        
             <CartBasket></CartBasket>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {basketItems.map((item) => (
-                <div 
-                  key={item.id} 
-                  className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-lg text-gray-800">{item.name}</h3>
-                    <button 
-                      onClick={() => removeBasketItem(item)}
-                      className="text-red-500 hover:bg-red-50 p-1 rounded-full transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                  <div className="space-y-1 text-sm text-gray-600">
-                    <p>Price: ${item.total_price}</p>
-                    <p>Store ID: {item.store_id}</p>
-                    <p>Created: {new Date(item.created_at).toLocaleDateString()}</p>
-                    <p>Number of Uses: {item.number_of_uses}</p>
-                    {item.profit_percentage_in_level_1 !== null && (
-                      <div className="mt-2 text-xs text-gray-500">
-                        <span>Level 1 Profit: {item.profit_percentage_in_level_1}%</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+         
+   
         </div>
       </div>
 

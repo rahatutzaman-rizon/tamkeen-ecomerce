@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+
 import { toast, Toaster } from 'react-hot-toast';
 import { 
   Trash2, 
@@ -24,14 +24,14 @@ const BasketPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const savedBasket = localStorage.getItem('basketItems');
+    const savedBasket = localStorage.getItem('basket');
     if (savedBasket) {
       setBasketItems(JSON.parse(savedBasket));
     }
   }, []);
 
   const updateBasketInLocalStorage = (items: BasketItem[]) => {
-    localStorage.setItem('basketItems', JSON.stringify(items));
+    localStorage.setItem('basket', JSON.stringify(items));
     setBasketItems(items);
   };
 

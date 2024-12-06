@@ -3,19 +3,11 @@ import { ShoppingCart, Eye } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Toaster, toast } from 'react-hot-toast';
 
-interface Product {
-  id: number;
-  name: string;
-  total_price: number;
-  number_of_uses: number;
-  images?: { image: string }[];
-}
-
-const BasketDisplay: React.FC = () => {
+const BasketDisplay = () => {
   const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -24,11 +16,11 @@ const BasketDisplay: React.FC = () => {
         if (!response.ok) {
           throw new Error('Failed to fetch products');
         }
-        const data: Product[] = await response.json();
+        const data = await response.json();
         setProducts(data);
         setLoading(false);
       } catch (err) {
-        setError((err as Error).message);
+        setError(err.message);
         setLoading(false);
       }
     };
@@ -36,11 +28,9 @@ const BasketDisplay: React.FC = () => {
     fetchProducts();
   }, []);
 
-  const addToCart = (product: Product) => {
-    const basket: Array<Product & { quantity: number }> = JSON.parse(
-      localStorage.getItem('basket') || '[]'
-    );
-    const existingProduct = basket.find((p) => p.id === product.id);
+  const addToCart = (product) => {
+    const basket = JSON.parse(localStorage.getItem('basket') || '[]');
+    const existingProduct = basket.find(p => p.id === product.id);
 
     if (existingProduct) {
       existingProduct.quantity += 1;
@@ -49,7 +39,7 @@ const BasketDisplay: React.FC = () => {
     }
 
     localStorage.setItem('basket', JSON.stringify(basket));
-
+    
     toast.success(`${product.name} Added to Cart!`, {
       style: {
         background: '#4299e1', // sky-600
@@ -59,7 +49,7 @@ const BasketDisplay: React.FC = () => {
     });
   };
 
-  const viewProductDetails = (productId: number) => {
+  const viewProductDetails = (productId) => {
     navigate(`/product/${productId}`);
   };
 
@@ -71,15 +61,15 @@ const BasketDisplay: React.FC = () => {
       <Toaster position="top-right" />
       <div className="container mx-auto p-4 grid md:grid-cols-3 gap-4">
         {products.map((product) => (
-          <div
-            key={product.id}
+          <div 
+            key={product.id} 
             className="bg-white shadow-lg rounded-lg overflow-hidden border border-sky-100"
           >
             <div className="bg-sky-100 p-4 flex justify-center">
               {product.images && product.images.length > 0 && (
-                <img
-                  src={`https://api.tamkeen.center/${product.images[0].image}`}
-                  alt={product.name}
+                <img 
+                  src={`https://api.tamkeen.center/${product.images[0].image}`} 
+                  alt={product.name} 
                   className="h-48 w-auto object-contain"
                 />
               )}
@@ -103,19 +93,19 @@ const BasketDisplay: React.FC = () => {
                   <ShoppingCart className="w-6 h-6" />
                   <span className="font-semibold">Add to Cart</span>
                 </button>
+<Link to ={ `categories/17`}>
+                <button
+                  className="
+                    flex items-center justify-center bg-gray-500 text-white p-3 rounded-lg
+                    hover:bg-gray-600 transition duration-300
+                    transform active:scale-95
+                  "
+                  onClick={() => viewProductDetails(product.id)}
+                >
+                  <Eye className="w-6 h-6" />
+                </button></Link>
 
-                <Link to={`categories/17`}>
-                  <button
-                    className="
-                      flex items-center justify-center bg-gray-500 text-white p-3 rounded-lg
-                      hover:bg-gray-600 transition duration-300
-                      transform active:scale-95
-                    "
-                    onClick={() => viewProductDetails(product.id)}
-                  >
-                    <Eye className="w-6 h-6" />
-                  </button>
-                </Link>
+                
               </div>
             </div>
           </div>

@@ -5,7 +5,11 @@ import {
   Minus, 
   ShoppingCart, 
   Tags, 
-  CreditCard 
+  CreditCard,
+  TicketPercent,
+  Tag,
+  ArrowRight,
+  Home
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -13,174 +17,275 @@ import { Link } from 'react-router-dom';
 interface CartItem {
   id: number;
   name: string;
-  total_price: string;
-  number_of_uses: number;
+  price: string;
   quantity: number;
   image?: string | null;
 }
 
+// Coupon interface
+interface Coupon {
+  code: string;
+  type: 'percentage' | 'fixed';
+  discount: number;
+}
+
 const CartPage: React.FC = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [total, setTotal] = useState<number>(0);
-  const [isAnimating, setIsAnimating] = useState<{ [key: number]: boolean }>({});
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [couponCode, setCouponCode] = useState<string>('');
+  const [couponError, setCouponError] = useState<string>('');
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+
+  // Predefined coupon options
+  const COUPONS: Coupon[] = [
+    { code: 'SAVE10', type: 'percentage', discount: 10 },
+    { code: 'SUMMER20', type: 'percentage', discount: 20 },
+    { code: 'FLAT5', type: 'fixed', discount: 5 }
+  ];
 
   useEffect(() => {
-    // Load items from local storage on component mount
-    const storedItems = localStorage.getItem('basket');
-    if (storedItems) {
-      const parsedItems: CartItem[] = JSON.parse(storedItems);
-      setCartItems(parsedItems);
-      calculateTotal(parsedItems);
+    // Load cart from local storage
+    const savedCart = localStorage.getItem('basket');
+    if (savedCart) {
+      setCart(JSON.parse(savedCart));
     }
   }, []);
 
-  const calculateTotal = (items: CartItem[]) => {
-    const totalAmount = items.reduce((acc, item) => 
-      acc + (parseFloat(item.total_price) * item.quantity), 0);
-    setTotal(totalAmount);
-  };
-
   const updateQuantity = (id: number, newQuantity: number) => {
-    const updatedItems = cartItems.map(item => 
+    const updatedCart = cart.map(item => 
       item.id === id 
         ? { ...item, quantity: Math.max(1, newQuantity) }
         : item
     );
-    
-    // Trigger animation
-    setIsAnimating(prev => ({ ...prev, [id]: true }));
-    setTimeout(() => {
-      setIsAnimating(prev => ({ ...prev, [id]: false }));
-    }, 300);
-    
-    setCartItems(updatedItems);
-    localStorage.setItem('basket', JSON.stringify(updatedItems));
-    calculateTotal(updatedItems);
+    setCart(updatedCart);
+    localStorage.setItem('basket', JSON.stringify(updatedCart));
   };
 
   const removeItem = (id: number) => {
-    const filteredItems = cartItems.filter(item => item.id !== id);
-    setCartItems(filteredItems);
-    localStorage.setItem('basket', JSON.stringify(filteredItems));
-    calculateTotal(filteredItems);
+    const updatedCart = cart.filter(item => item.id !== id);
+    setCart(updatedCart);
+    localStorage.setItem('basket', JSON.stringify(updatedCart));
+  };
+
+  const applyCoupon = () => {
+    // Reset previous coupon state
+    setCouponError('');
+    setAppliedCoupon(null);
+
+    // Find matching coupon
+    const foundCoupon = COUPONS.find(
+      coupon => coupon.code.toUpperCase() === couponCode.toUpperCase()
+    );
+
+    if (foundCoupon) {
+      setAppliedCoupon(foundCoupon);
+    } else {
+      setCouponError('Invalid coupon code');
+    }
+  };
+
+  const calculateTotal = () => {
+    const subtotal = cart.reduce(
+      (total, item) => total + parseFloat(item.total_price) * item.quantity, 
+      0
+    );
+
+    if (appliedCoupon) {
+      if (appliedCoupon.type === 'percentage') {
+        return subtotal * (1 - appliedCoupon.discount / 100);
+      } else {
+        return Math.max(0, subtotal - appliedCoupon.discount);
+      }
+    }
+
+    return subtotal;
+  };
+
+  const continueShopping = () => {
+    // Navigate to product listing page
+    window.location.href = '/';
+  };
+
+  const checkout = () => {
+    // Navigate to checkout page
+    window.location.href = '/checkout';
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-100 to-sky-200 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-2xl overflow-hidden border-2 border-sky-100">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-sky-500 to-sky-600 text-white p-6 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <ShoppingCart size={32} />
-            <h1 className="text-3xl font-bold tracking-tight">Your Cart</h1>
-          </div>
-          <div className="bg-sky-700 rounded-full px-4 py-2 text-sm font-semibold">
-            {cartItems.length} Items
-          </div>
-        </div>
-        
-        {/* Empty Cart State */}
-        {cartItems.length === 0 ? (
-          <div className="text-center py-16 px-6">
-            <div className="bg-sky-100 rounded-full p-6 inline-block mb-6">
-              <ShoppingCart size={64} className="text-sky-500 opacity-70" />
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 mt-12">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Side: Cart Items */}
+          <div className="bg-white shadow-xl rounded-xl border border-sky-100 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <ShoppingCart size={28} className="text-sky-600" />
+                <h2 className="text-2xl font-bold text-sky-800">
+                  Your Cart
+                </h2>
+              </div>
+              <div className="bg-sky-100 text-sky-700 px-3 py-1 rounded-full text-sm">
+                {cart.length} Items
+              </div>
             </div>
-            <p className="text-2xl text-gray-600 font-semibold">
-              Your cart is empty
-            </p>
-            <p className="text-gray-500 mt-2">
-              Explore our products and add some items to get started!
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Cart Items */}
-            <div className="divide-y divide-sky-100">
-              {cartItems.map((item) => (
-                <div 
-                  key={item.id} 
-                  className={`p-6 flex items-center transition-all duration-300 
-                    ${isAnimating[item.id] ? 'scale-105 bg-sky-50' : 'scale-100'}`}
-                >
-                  {/* Product Image */}
-                  <div className="w-24 h-24 mr-6 rounded-xl overflow-hidden shadow-lg">
-                    {item.image ? (
-                      <img 
-                        src={item.image} 
-                        alt={item.name} 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-sky-100 flex items-center justify-center text-sky-500">
-                        <Tags size={32} />
-                      </div>
-                    )}
-                  </div>
 
-                  {/* Product Details */}
-                  <div className="flex-grow">
-                    <h2 className="text-xl font-bold text-gray-800 mb-1">{item.name}</h2>
-                    <p className="text-sky-600 font-semibold">
-                      ${item.total_price} per item
-                    </p>
-                    <p className="text-gray-500 text-sm">
-                      {item.number_of_uses} Uses Available
-                    </p>
-                  </div>
-
-                  {/* Quantity and Actions */}
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center border-2 border-sky-200 rounded-full overflow-hidden">
-                      <button 
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="p-2 bg-sky-50 text-sky-600 hover:bg-sky-100 transition-colors"
-                      >
-                        <Minus size={20} />
-                      </button>
-                      <span className="px-4 text-gray-700 font-semibold">
-                        {item.quantity}
-                      </span>
-                      <button 
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="p-2 bg-sky-50 text-sky-600 hover:bg-sky-100 transition-colors"
-                      >
-                        <Plus size={20} />
-                      </button>
+            {cart.length === 0 ? (
+              <div className="text-center py-12">
+                <ShoppingCart size={64} className="mx-auto text-sky-300 mb-4" />
+                <p className="text-xl text-sky-700">
+                  Your cart is empty
+                </p>
+                <p className="text-sky-500 mt-2">
+                  Browse our products and add some items!
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {cart.map((item) => (
+                  <div 
+                    key={item.id} 
+                    className="flex items-center border-b border-sky-100 pb-4"
+                  >
+                    {/* Product Image */}
+                    <div className="w-24 h-24 mr-4 rounded-lg overflow-hidden border border-sky-200">
+                      {item.image ? (
+                        <img 
+                          src={item.image} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-sky-50 flex items-center justify-center">
+                          <Tags size={32} className="text-sky-400" />
+                        </div>
+                      )}
                     </div>
 
-                    <button 
-                      onClick={() => removeItem(item.id)}
-                      className="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded-full hover:bg-red-100 transition-all"
-                    >
-                      <Trash2 size={24} />
-                    </button>
+                    {/* Product Details */}
+                    <div className="flex-grow">
+                      <h3 className="text-sm font-semibold text-sky-800">
+                        {item.name}
+                      </h3>
+                      <p className="text-sky-600">
+                        ${item.total_price}
+                      </p>
+                    </div>
+
+                    {/* Quantity Controls */}
+                    <div className="flex items-center space-x-3">
+                      <div className="flex items-center border border-sky-200 rounded-md">
+                        <button 
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className="px-2 py-1 text-sky-600 hover:bg-sky-100"
+                        >
+                          <Minus size={16} />
+                        </button>
+                        <span className="px-3 text-sky-800">
+                          {item.quantity}
+                        </span>
+                        <button 
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="px-2 py-1 text-sky-600 hover:bg-sky-100"
+                        >
+                          <Plus size={16} />
+                        </button>
+                      </div>
+                      <button 
+                        onClick={() => removeItem(item.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
                   </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Right Side: Order Summary */}
+          <div className="border rounded-lg p-6 bg-sky-50">
+            <h3 className="text-xl font-bold border-b pb-3 mb-4 flex items-center text-sky-800">
+              <Tag className="mr-2 text-sky-600" size={20} />
+              Order Summary
+            </h3>
+            
+            {/* Coupon Section */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-sky-700 mb-2">
+                Discount Coupon
+              </label>
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  placeholder="Enter coupon code"
+                  className="w-full px-3 py-2 border border-sky-300 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500"
+                />
+                <button 
+                  onClick={applyCoupon}
+                  className="bg-sky-600 text-white px-4 py-2 rounded-md hover:bg-sky-700 transition-colors"
+                >
+                  Apply
+                </button>
+              </div>
+              {couponError && (
+                <p className="text-red-500 text-xs mt-1">{couponError}</p>
+              )}
+              {appliedCoupon && (
+                <div className="mt-2 text-green-600 text-sm">
+                  Coupon applied: {appliedCoupon.code} 
+                  {appliedCoupon.type === 'percentage' 
+                    ? ` (${appliedCoupon.discount}% off)` 
+                    : ` ($${appliedCoupon.discount} off)`}
                 </div>
-              ))}
+              )}
             </div>
 
-            {/* Total and Checkout Section */}
-            <div className="bg-sky-50 p-8">
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center space-x-4">
-                  <CreditCard size={32} className="text-sky-600" />
-                  <span className="text-xl font-bold text-gray-800">Total:</span>
-                </div>
-                <span className="text-3xl font-bold text-sky-600">
-                  ${total.toFixed(2)}
+            {/* Price Breakdown */}
+            <div className="space-y-3 border-t border-sky-200 pt-4">
+              <div className="flex justify-between">
+                <span className="text-sky-700">Subtotal</span>
+                <span className="font-bold text-sky-900">
+                  ${cart.reduce((total, item) => total + parseFloat(item.total_price) * item.quantity, 0).toFixed(2)}
                 </span>
               </div>
-<Link to="/checkout">
-              <button className="w-full bg-gradient-to-r from-sky-500 to-sky-600 text-white 
-                py-4 rounded-xl hover:from-sky-600 hover:to-sky-700 
-                transition-all transform hover:-translate-y-1 shadow-xl 
-                text-lg font-bold tracking-wide">
-                Proceed to Checkout
-              </button>
-              </Link>
+              {appliedCoupon && (
+                <div className="flex justify-between text-green-600">
+                  <span>Discount</span>
+                  <span className="font-bold">
+                    -${(cart.reduce((total, item) => total + parseFloat(item.total_price) * item.quantity, 0) * (appliedCoupon.discount / 100)).toFixed(2)}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between font-bold text-lg border-t border-sky-200 pt-2">
+                <span className="text-sky-800">Total</span>
+                <span className="text-sky-900">${calculateTotal().toFixed(2)}</span>
+              </div>
             </div>
-          </>
-        )}
+
+            {/* Action Buttons */}
+            <div className="mt-6 space-y-3">
+              <Link to="/checkout">
+                <button 
+                  onClick={checkout}
+                  disabled={cart.length === 0}
+                  className="w-full bg-sky-600 text-white py-3 rounded-md hover:bg-sky-700 transition-colors flex items-center justify-center"
+                >
+                  Proceed to Checkout
+                  <ArrowRight className="ml-2" size={20} />
+                </button> 
+              </Link>
+              <button 
+                onClick={continueShopping}
+                className="w-full border border-sky-600 text-sky-700 py-3 rounded-md hover:bg-sky-100 transition-colors flex items-center justify-center"
+              >
+                <Home className="mr-2" size={20} />
+                Continue Shopping
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
